@@ -17,9 +17,8 @@
       async function measureRegion(region) {
         const start = performance.now();
         try {
-          const res = await fetch(region.url, { method: 'GET', mode: 'cors' });
-          // Consume a tiny bit to ensure completion
-          await res.text();
+          // Use no-cors so we can hit endpoints that don't send CORS headers.
+          await fetch(region.url, { method: 'GET', mode: 'no-cors' });
           const end = performance.now();
           return { region: region.name, latencyMs: end - start, ok: true };
         } catch (err) {
