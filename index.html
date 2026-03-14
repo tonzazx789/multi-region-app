@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi-Region Latency Check</title>
+  </head>
+  <body>
+    <pre id="output">Measuring latency...</pre>
+    <script>
+      const regions = [
+        { name: 'asia', url: 'https://translate.google.com/?sl=auto&tl=th&text=Health%20check%20is%20successful.%20Routing%20traffic%20to%20application.&op=translate' },
+        { name: 'us-east-1', url: 'https://bes3abne48.us-east-1.awsapprunner.com/' }
+      ];
+
+      const outputEl = document.getElementById('output');
+
+      async function measureRegion(region) {
+        const start = performance.now();
+        try {
+          const res = await fetch(region.url, { method: 'GET', mode: 'cors' });
+          // Consume a tiny bit to ensure completion
+          await res.text();
+          const end = performance.now();
+          return { region: region.name, latencyMs: end - start, ok: true };
+        } catch (err) {
+          const end = performance.now();
+          return { region: region.name, latencyMs: end - start, ok: false, error: String(err) };
+        }
+      }
+
+      async function run() {
+        const results = [];
+        for (const region of regions) {
+          const r = await measureRegion(region);
+          results.push(r);
+        }
+
+        const lines = results.map(r => {
+          if (r.ok) {
+            return `${r.region}: ${r.latencyMs.toFixed(2)} ms`;
+          }
+          return `${r.region}: ERROR after ${r.latencyMs.toFixed(2)} ms - ${r.error}`;
+        });
+
+        outputEl.textContent = lines.join('\n');
+      }
+
+      run();
+    </script>
+  </body>
+</html>
+
